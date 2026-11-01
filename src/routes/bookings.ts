@@ -71,7 +71,6 @@ router.post("/", wrap(async (req, res) => {
     end,
     hours,
     guests,
-    note: typeof req.body.note === "string" ? req.body.note.trim().slice(0, 500) : "",
     hourlyRate: studio.hourlyRate,
     securityDeposit: studio.securityDeposit,
     subtotal,
@@ -96,7 +95,7 @@ router.get("/host", wrap(async (req, res) => {
 router.get("/stats", wrap(async (req, res) => {
   const { bookings, studios, wishlist } = await collections();
   const email = req.user!.email;
-  const [listings, saved, asGuest, asHost] = await Promise.all([
+  const [listings, saved, asGuest] = await Promise.all([
     studios.countDocuments({ ownerEmail: email }),
     wishlist.countDocuments({ userEmail: email }),
     bookings
@@ -105,20 +104,8 @@ router.get("/stats", wrap(async (req, res) => {
         { $group: { _id: "$status", count: { $sum: 1 } } },
       ])
       .toArray(),
-    bookings
-      .aggregate<{ _id: BookingStatus; count: number; earned: number }>([
-        { $match: { hostEmail: email } },
-        {
-          $group: {
-            _id: "$status",
-            count: { $sum: 1 },
-            earned: { $sum: "$subtotal" },
-          },
-        },
-      ])
-      .toArray(),
   ]);
-  res.json({ listings, saved, asGuest, asHost });
+  res.json({ listings, saved, asGuest });
 }));
 
 router.patch("/:id/cancel", wrap(async (req, res) => {

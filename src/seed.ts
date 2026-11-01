@@ -324,7 +324,6 @@ async function main() {
       end: new Date(start.getTime() + hours * 3_600_000),
       hours,
       guests: 2,
-      note: "",
       hourlyRate: studio.hourlyRate,
       securityDeposit: studio.securityDeposit,
       subtotal,

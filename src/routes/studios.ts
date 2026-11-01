@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { Filter, ObjectId, Sort } from "mongodb";
+import { Filter, ObjectId } from "mongodb";
 import { collections, Studio } from "../db";
 import { verifyToken } from "../middleware/auth";
 import { asObjectId, cleanUrl, escapeRegex, HttpError, wrap } from "../utils";
@@ -41,7 +41,7 @@ function parseStudio(body: Record<string, unknown>) {
 
 router.get("/", wrap(async (req, res) => {
   const { studios } = await collections();
-  const { search, category, minPrice, maxPrice, minRating, capacity, amenity, sort } = req.query;
+  const { search, category } = req.query;
   const filter: Filter<Studio> = {};
 
   if (typeof search === "string" && search.trim()) {
@@ -51,35 +51,8 @@ router.get("/", wrap(async (req, res) => {
   if (typeof category === "string" && category) {
     filter.category = { $in: category.split(",") };
   }
-  const min = Number(minPrice);
-  const max = Number(maxPrice);
-  const price: { $gte?: number; $lte?: number } = {};
-  if (minPrice && Number.isFinite(min)) price.$gte = min;
-  if (maxPrice && Number.isFinite(max)) price.$lte = max;
-  if (Object.keys(price).length > 0) filter.hourlyRate = price;
-  if (minRating && Number.isFinite(Number(minRating))) filter.rating = { $gte: Number(minRating) };
-  if (capacity && Number.isFinite(Number(capacity))) filter.maxCapacity = { $gte: Number(capacity) };
-  if (typeof amenity === "string" && amenity) filter.amenities = { $all: amenity.split(",") };
-
-  const sorts: Record<string, Sort> = {
-    newest: { createdAt: -1, _id: -1 },
-    "price-asc": { hourlyRate: 1, _id: 1 },
-    "price-desc": { hourlyRate: -1, _id: 1 },
-    rating: { rating: -1, reviewCount: -1, _id: 1 },
-  };
-  const page = Math.max(1, Number(req.query.page) || 1);
-  const limit = Math.min(48, Math.max(1, Number(req.query.limit) || 12));
-
-  const [items, total] = await Promise.all([
-    studios
-      .find(filter)
-      .sort(sorts[String(sort)] ?? sorts.rating)
-      .skip((page - 1) * limit)
-      .limit(limit)
-      .toArray(),
-    studios.countDocuments(filter),
-  ]);
-  res.json({ items, total, page, pages: Math.max(1, Math.ceil(total / limit)) });
+  const items = await studios.find(filter).sort({ rating: -1, reviewCount: -1, _id: 1 }).toArray();
+  res.json({ items, total: items.length });
 }));
 
 router.get("/featured", wrap(async (_req, res) => {

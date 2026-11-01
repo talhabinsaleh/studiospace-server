@@ -10,7 +10,7 @@ Express 5, TypeScript, MongoDB native driver, jsonwebtoken, cookie-parser, deplo
 
 ## Main features
 
-- Studio CRUD with search, filters, sorting and pagination using MongoDB operators such as `$regex`, `$in`, `$gte`, `$lte` and `$all`
+- Studio CRUD with search and category filtering using MongoDB operators such as `$regex`, `$or` and `$in`
 - JWT verification from an HTTPOnly cookie, with `401 Unauthorized` on protected routes
 - Ownership checks taken from the verified token, never from the request body
 - Double-booking prevention using the overlap rule `start < newEnd AND end > newStart`

@@ -40,7 +40,6 @@ export interface Booking extends Document {
   end: Date;
   hours: number;
   guests: number;
-  note: string;
   hourlyRate: number;
   securityDeposit: number;
   subtotal: number;
